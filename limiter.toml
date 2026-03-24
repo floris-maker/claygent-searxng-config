@@ -1,0 +1,14 @@
+# Rate limiting configuration for SearXNG
+# Keep it conservative to avoid getting blocked by upstream search engines
+
+[botdetection.ip_limit]
+# Max requests per time window from a single IP
+link_token = false
+# Allow generous limits since this is internal use only
+request_limit = 30
+burst_limit = 10
+
+[botdetection.ip_lists]
+pass_ip = [
+  "0.0.0.0/0",  # Allow all IPs (internal service)
+]

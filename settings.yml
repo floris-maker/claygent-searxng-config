@@ -1,0 +1,64 @@
+use_default_settings: true
+
+general:
+  instance_name: "Claygent Search"
+  debug: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "en"
+  formats:
+    - html
+    - json
+
+server:
+  secret_key: "claygent-searxng-secret-change-me"
+  limiter: true
+  public_instance: false
+  image_proxy: false
+
+redis:
+  url: "redis://redis:6379/0"
+
+engines:
+  # Enable only general web search engines
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: false
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    disabled: false
+
+  - name: brave
+    engine: brave
+    shortcut: br
+    disabled: false
+
+  # Disable image/video/music engines to save resources
+  - name: google images
+    disabled: true
+  - name: bing images
+    disabled: true
+  - name: google videos
+    disabled: true
+  - name: bing videos
+    disabled: true
+  - name: youtube
+    disabled: true
+  - name: dailymotion
+    disabled: true
+  - name: vimeo
+    disabled: true
+  - name: soundcloud
+    disabled: true
+  - name: bandcamp
+    disabled: true
