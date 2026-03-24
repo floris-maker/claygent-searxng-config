@@ -14,9 +14,11 @@ search:
 
 server:
   secret_key: "claygent-searxng-secret-change-me"
-  limiter: true
+  limiter: false
   public_instance: false
   image_proxy: false
+  bind_address: "0.0.0.0"
+  port: 8080
 
 redis:
   url: "${SEARXNG_REDIS_URL}"
