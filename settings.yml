@@ -20,8 +20,7 @@ server:
   bind_address: "0.0.0.0"
   port: 8080
 
-redis:
-  url: "${SEARXNG_REDIS_URL}"
+# Redis URL is read from SEARXNG_REDIS_URL env var automatically
 
 engines:
   # Enable only general web search engines

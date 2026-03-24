@@ -4,9 +4,9 @@ FROM searxng/searxng:latest
 COPY settings.yml /etc/searxng/settings.yml
 COPY limiter.toml /etc/searxng/limiter.toml
 
-# Entrypoint script that replaces the Redis URL placeholder
-# with the actual SEARXNG_REDIS_URL env var at runtime
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Generate a random secret key at build time
+RUN python3 -c "import secrets; print(secrets.token_hex(32))" > /tmp/secret && \
+    sed -i "s|claygent-searxng-secret-change-me|$(cat /tmp/secret)|g" /etc/searxng/settings.yml && \
+    rm /tmp/secret
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Use the base image's default entrypoint and CMD — no overrides needed
