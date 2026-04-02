@@ -33,26 +33,32 @@ outgoing:
 # Redis URL is read from SEARXNG_REDIS_URL env var automatically
 
 engines:
-  # Enable only general web search engines
-  - name: google
-    engine: google
-    shortcut: g
-    disabled: false
-
+  # Prioritize engines that don't block aggressively
+  # weight: higher = more results merged from this engine (default is 1)
   - name: bing
     engine: bing
     shortcut: b
     disabled: false
+    weight: 1.5
 
   - name: duckduckgo
     engine: duckduckgo
     shortcut: ddg
     disabled: false
+    weight: 1.5
 
   - name: brave
     engine: brave
     shortcut: br
     disabled: false
+    weight: 1.5
+
+  # Google gets blocked on shared/datacenter IPs — keep enabled but lower weight
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+    weight: 0.5
 
   # Disable image/video/music engines to save resources
   - name: google images
