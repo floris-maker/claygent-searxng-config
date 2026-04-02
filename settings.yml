@@ -20,6 +20,16 @@ server:
   bind_address: "0.0.0.0"
   port: 8080
 
+# Outgoing proxy rotation to avoid IP blocks from search engines
+# Set SEARXNG_PROXY_URL env var to a rotating proxy endpoint, e.g.:
+#   http://user:pass@p.webshare.io:80  (Webshare rotating proxy)
+#   socks5://user:pass@proxy.example.com:1080
+# If not set, requests go out directly (will get blocked on shared IPs)
+outgoing:
+  request_timeout: 10
+  useragent_suffix: ""
+  # Proxies are injected at runtime via entrypoint.sh from SEARXNG_PROXY_URL env var
+
 # Redis URL is read from SEARXNG_REDIS_URL env var automatically
 
 engines:
