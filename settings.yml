@@ -1027,15 +1027,10 @@ outgoing:
     - http://lenvthja-1000:0knwfjsefp8v@p.webshare.io:80
 
 engines:
+  # Primary engines — most reliable with proxies
   - name: bing
     engine: bing
     shortcut: b
-    disabled: false
-    weight: 1.5
-
-  - name: duckduckgo
-    engine: duckduckgo
-    shortcut: ddg
     disabled: false
     weight: 1.5
 
@@ -1049,8 +1044,37 @@ engines:
     engine: google
     shortcut: g
     disabled: false
+    weight: 1.0
+
+  - name: startpage
+    engine: startpage
+    shortcut: sp
+    disabled: false
+    weight: 1.0
+
+  - name: mojeek
+    engine: mojeek
+    shortcut: mj
+    disabled: false
     weight: 0.5
 
+  - name: yahoo
+    engine: yahoo
+    shortcut: yh
+    disabled: false
+    weight: 0.5
+
+  - name: qwant
+    engine: qwant
+    shortcut: qw
+    disabled: false
+    weight: 0.5
+
+  # DuckDuckGo always returns CAPTCHA — disable
+  - name: duckduckgo
+    disabled: true
+
+  # Disable media engines
   - name: google images
     disabled: true
   - name: bing images
