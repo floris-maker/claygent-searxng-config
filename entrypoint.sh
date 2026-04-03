@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Replace the Redis URL placeholder with the actual env var
 if [ -n "$SEARXNG_REDIS_URL" ]; then
