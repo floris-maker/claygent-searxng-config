@@ -3,12 +3,14 @@ FROM searxng/searxng:latest
 # Copy settings (no limiter.toml — it causes schema errors in latest SearXNG)
 COPY settings.yml /etc/searxng/settings.yml
 
+# Copy proxy list (1000 rotating proxies, one per line)
+COPY proxies.txt /etc/searxng/proxies.txt
+
 # Remove any existing limiter.toml to prevent validation errors
 RUN rm -f /etc/searxng/limiter.toml
 
-# Generate a random secret key at build time
-RUN python3 -c "import secrets; print(secrets.token_hex(32))" > /tmp/secret && \
-    sed -i "s|claygent-searxng-secret-change-me|$(cat /tmp/secret)|g" /etc/searxng/settings.yml && \
-    rm /tmp/secret
+# Copy and set custom entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Use the base image's default entrypoint and CMD
+ENTRYPOINT ["/entrypoint.sh"]

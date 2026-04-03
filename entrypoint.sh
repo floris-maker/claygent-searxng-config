@@ -11,12 +11,33 @@ if [ -z "$SEARXNG_SECRET_KEY" ]; then
 fi
 sed -i "s|claygent-searxng-secret-change-me|${SEARXNG_SECRET_KEY}|g" /etc/searxng/settings.yml
 
-# Inject proxy rotation if SEARXNG_PROXY_URL is set
-# Supports single rotating proxy or multiple comma-separated:
-#   SEARXNG_PROXY_URL=http://user:pass@p.webshare.io:80
-#   SEARXNG_PROXY_URL=http://p1:8080,http://p2:8080,socks5://p3:1080
-if [ -n "$SEARXNG_PROXY_URL" ]; then
-  echo "[entrypoint] Injecting proxy config..."
+# Inject proxy rotation from proxies.txt file or SEARXNG_PROXY_URL env var
+PROXY_FILE="/etc/searxng/proxies.txt"
+if [ -f "$PROXY_FILE" ] && [ -s "$PROXY_FILE" ]; then
+  echo "[entrypoint] Loading proxies from $PROXY_FILE..."
+  python3 << 'PYEOF'
+import yaml
+
+settings_path = '/etc/searxng/settings.yml'
+proxy_file = '/etc/searxng/proxies.txt'
+
+with open(settings_path, 'r') as f:
+    cfg = yaml.safe_load(f)
+
+with open(proxy_file, 'r') as f:
+    proxy_urls = [line.strip() for line in f if line.strip()]
+
+cfg.setdefault('outgoing', {})
+cfg['outgoing']['proxies'] = {'all://': proxy_urls}
+cfg['outgoing']['request_timeout'] = 10
+
+with open(settings_path, 'w') as f:
+    yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
+
+print(f"[entrypoint] {len(proxy_urls)} proxy(ies) configured from file")
+PYEOF
+elif [ -n "$SEARXNG_PROXY_URL" ]; then
+  echo "[entrypoint] Injecting proxy config from env..."
   python3 << 'PYEOF'
 import os, yaml
 
@@ -32,7 +53,7 @@ cfg['outgoing']['request_timeout'] = 10
 with open(settings_path, 'w') as f:
     yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
 
-print(f"[entrypoint] {len(proxy_urls)} proxy(ies) configured")
+print(f"[entrypoint] {len(proxy_urls)} proxy(ies) configured from env")
 PYEOF
 fi
 
