@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Replace the Redis URL placeholder with the actual env var
 if [ -n "$SEARXNG_REDIS_URL" ]; then
@@ -7,7 +7,7 @@ fi
 
 # Generate a random secret key if not provided
 if [ -z "$SEARXNG_SECRET_KEY" ]; then
-  SEARXNG_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
+  SEARXNG_SECRET_KEY=$(head -c 32 /dev/urandom | od -A n -t x1 | tr -d ' \n')
 fi
 sed -i "s|claygent-searxng-secret-change-me|${SEARXNG_SECRET_KEY}|g" /etc/searxng/settings.yml
 
@@ -15,46 +15,38 @@ sed -i "s|claygent-searxng-secret-change-me|${SEARXNG_SECRET_KEY}|g" /etc/searxn
 PROXY_FILE="/etc/searxng/proxies.txt"
 if [ -f "$PROXY_FILE" ] && [ -s "$PROXY_FILE" ]; then
   echo "[entrypoint] Loading proxies from $PROXY_FILE..."
-  python3 << 'PYEOF'
-import yaml
+  PROXY_COUNT=$(wc -l < "$PROXY_FILE" | tr -d ' ')
 
-settings_path = '/etc/searxng/settings.yml'
-proxy_file = '/etc/searxng/proxies.txt'
+  # Build YAML proxy list entries
+  {
+    echo ""
+    echo "outgoing:"
+    echo "  request_timeout: 10"
+    echo "  proxies:"
+    echo "    all://:"
+    while IFS= read -r line || [ -n "$line" ]; do
+      line=$(echo "$line" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      [ -z "$line" ] && continue
+      echo "    - $line"
+    done < "$PROXY_FILE"
+  } >> /etc/searxng/settings.yml
 
-with open(settings_path, 'r') as f:
-    cfg = yaml.safe_load(f)
-
-with open(proxy_file, 'r') as f:
-    proxy_urls = [line.strip() for line in f if line.strip()]
-
-cfg.setdefault('outgoing', {})
-cfg['outgoing']['proxies'] = {'all://': proxy_urls}
-cfg['outgoing']['request_timeout'] = 10
-
-with open(settings_path, 'w') as f:
-    yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
-
-print(f"[entrypoint] {len(proxy_urls)} proxy(ies) configured from file")
-PYEOF
+  echo "[entrypoint] ${PROXY_COUNT} proxy(ies) configured from file"
 elif [ -n "$SEARXNG_PROXY_URL" ]; then
   echo "[entrypoint] Injecting proxy config from env..."
-  python3 << 'PYEOF'
-import os, yaml
-
-settings_path = '/etc/searxng/settings.yml'
-with open(settings_path, 'r') as f:
-    cfg = yaml.safe_load(f)
-
-proxy_urls = [p.strip() for p in os.environ['SEARXNG_PROXY_URL'].split(',') if p.strip()]
-cfg.setdefault('outgoing', {})
-cfg['outgoing']['proxies'] = {'all://': proxy_urls}
-cfg['outgoing']['request_timeout'] = 10
-
-with open(settings_path, 'w') as f:
-    yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
-
-print(f"[entrypoint] {len(proxy_urls)} proxy(ies) configured from env")
-PYEOF
+  {
+    echo ""
+    echo "outgoing:"
+    echo "  request_timeout: 10"
+    echo "  proxies:"
+    echo "    all://:"
+    echo "$SEARXNG_PROXY_URL" | tr ',' '\n' | while IFS= read -r p; do
+      p=$(echo "$p" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+      [ -z "$p" ] && continue
+      echo "    - $p"
+    done
+  } >> /etc/searxng/settings.yml
+  echo "[entrypoint] Proxy(ies) configured from env"
 fi
 
 # Set the SEARXNG_SETTINGS_PATH so SearXNG finds our config
